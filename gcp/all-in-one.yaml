@@ -1,0 +1,65 @@
+# Copyright (C) 2022 Trend Micro Inc. All rights reserved.
+
+imports:
+  - path: cloud_function.py
+  - path: pubsub.py
+  - path: storage.py
+  - path: scanner.py
+  - path: storage_role.py
+  - path: storage_service_account.py
+  - path: scanner_role.py
+  - path: scanner_service_account.py
+
+resources:
+- name: storage-stack-role
+  type: storage_role.py
+
+- name: storage-stack-service-account
+  type: storage_service_account.py
+  properties:
+    bucketListenerRoleID: $(ref.storage-stack-role.bucketListenerRoleID)
+    postActionTagRoleID: $(ref.storage-stack-role.postActionTagRoleID)
+
+- name: scanner-stack-role
+  type: scanner_role.py
+
+- name: scanner-stack-service-account
+  type: scanner_service_account.py
+
+- name: scanner-stack
+  type: scanner.py
+  properties:
+    # artifactBucket is the name of the bucket where the function zip files are placed
+    artifactBucket: <ARTIFACT_BUCKET_NAME>
+    scannerServiceAccountID: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+
+- name: storage-stack
+  type: storage.py
+  properties:
+    # artifactBucket is the name of the bucket where the function zip files are placed
+    artifactBucket: <ARTIFACT_BUCKET_NAME>
+    # scanningBucket is the name of the bucket you want to protect by FSS
+    scanningBucket: <SCANNING_BUCKET_NAME>
+    scannerProjectID: <SCANNER_PROJECT_ID>
+    scannerTopic: $(ref.scanner-stack.scannerTopic)
+    bucketListenerServiceAccountID: $(ref.storage-stack-service-account.bucketListenerServiceAccountID)
+    postActionTagServiceAccountID: $(ref.storage-stack-service-account.postActionTagServiceAccountID)
+    postActionTagRoleID: $(ref.storage-stack-role.postActionTagRoleID)
+
+outputs:
+  - name: scannerProjectID
+    value: $(ref.scanner-stack.scannerProjectID)
+  - name: scannerTopic
+    value: $(ref.scanner-stack.scannerTopic)
+  - name: scannerServiceAccountID
+    value: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+  - name: storageProjectID
+    value: $(ref.storage-stack.storageProjectID)
+  - name: bucketListenerSourceArchiveUrl
+    value: $(ref.storage-stack.bucketListenerSourceArchiveUrl)
+  - name: bucketListenerServiceAccountID
+    value: $(ref.storage-stack-service-account.bucketListenerServiceAccountID)
+  - name: postActionTagServiceAccountID
+    value: $(ref.storage-stack-service-account.postActionTagServiceAccountID)
+  - name: scanResultTopic
+    value: $(ref.storage-stack.scanResultTopic)
