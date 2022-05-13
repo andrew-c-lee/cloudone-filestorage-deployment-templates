@@ -1,0 +1,38 @@
+# Copyright (C) 2022 Trend Micro Inc. All rights reserved.
+
+imports:
+  - path: cloud_function.py
+  - path: pubsub.py
+  - path: scanner.py
+  - path: scanner_service_account.py
+  - path: common.py
+
+resources:
+- name: scanner-stack-service-account
+  type: scanner_service_account.py
+
+- name: scanner-stack
+  type: scanner.py
+  properties:
+    region: <REGION>
+    artifactBucket: <ARTIFACT_BUCKET_NAME>
+    scannerServiceAccountID: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+  metadata:
+    dependsOn:
+    - scanner-stack-service-account
+
+outputs:
+  - name: region
+    value: $(ref.scanner-stack.region)
+  - name: scannerProjectID
+    value: $(ref.scanner-stack.scannerProjectID)
+  - name: scannerTopic
+    value: $(ref.scanner-stack.scannerTopic)
+  - name: scannerTopicDLT
+    value: $(ref.scanner-stack.scannerTopicDLT)
+  - name: scannerFunctionName
+    value: $(ref.scanner-stack.scannerFunctionName)
+  - name: scannerDLTFunctionName
+    value: $(ref.scanner-stack.scannerDLTFunctionName)
+  - name: scannerServiceAccountID
+    value: $(ref.scanner-stack-service-account.scannerServiceAccountID)
