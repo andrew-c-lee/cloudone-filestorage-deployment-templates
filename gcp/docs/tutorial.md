@@ -16,8 +16,8 @@ There is also a [video demonstration](https://www.youtube.com/watch?v) if you pr
 
 For the list of permissions that File Storage Security management roles will have after it has been deployed and configured:
 
-* Search on "ManagementRole" in the <walkthrough-editor-open-file filePath="../scanner.yaml">scanner stack template</walkthrough-editor-open-file>
-* Search on "ManagementRole" in the <walkthrough-editor-open-file filePath="../storage.yaml">storage stack template</walkthrough-editor-open-file>
+* Search on "ManagementRole" in the <walkthrough-editor-open-file filePath="scanner.yaml">scanner stack template</walkthrough-editor-open-file>
+* Search on "ManagementRole" in the <walkthrough-editor-open-file filePath="storage.yaml">storage stack template</walkthrough-editor-open-file>
 
 ### Backend updates
 
@@ -37,7 +37,7 @@ gcloud config set project <walkthrough-project-id/>
 
 Specify the following fields and execute the deployment script in cloud shell:
 
-1. Stack name: Specify the prefix of this deployment. Please keep it under 19 characters.
+1. Stack name: Specify the prefix of this deployment. Please keep it under 22 characters.
 2. Scanning bucket name: Specify the existing bucket name that you wish to protect.
 3. Region: Specify the region of your bucket. For the list of supported GCP region, please see [Supported GCP Regions](https://cloudone.trendmicro.com/docs/file-storage-security/).
 
