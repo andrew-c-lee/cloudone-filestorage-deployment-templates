@@ -7,11 +7,12 @@ do
         s) SCANNING_BUCKET_NAME=${OPTARG};;
         d) DEPLOYMENT_NAME_STORAGE=${OPTARG};;
         r) REGION=${OPTARG};;
-        i) SCANNER_INFO_FILE=${OPTARG};;
+        i) SCANNER_INFO_JSON=${OPTARG};;
     esac
 done
 
-cat $SCANNER_INFO_FILE
+SCANNER_INFO_FILE='scanner-info'-$(cat /proc/sys/kernel/random/uuid).json
+echo $SCANNER_INFO_JSON > $SCANNER_INFO_FILE
 while IFS== read key value
 do
     printf -v "$key" "$value"
@@ -23,14 +24,14 @@ ARTIFACT_BUCKET_NAME='fss-artifact'-$(cat /proc/sys/kernel/random/uuid)
 printInfo() {
   echo "Scanning bucket name: $SCANNING_BUCKET_NAME";
   echo "Artifact bucket name: $ARTIFACT_BUCKET_NAME";
-  echo "Scanner info file: $SCANNER_INFO_FILE"
+  echo "Scanner info JSON: $SCANNER_INFO_JSON"
   echo "Storage Deployment Name: $DEPLOYMENT_NAME_STORAGE";
   echo "GCP Project ID: $GCP_PROJECT_ID";
   echo "Region: $REGION";
 }
 
 printInfo
-echo "Will deploy file storage security protection unit, Ctrl-C to cancel..."
+echo "Will deploy file storage security protection unit storage stack, Ctrl-C to cancel..."
 sleep 5
 
 PREVIEW_BUCKET_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
