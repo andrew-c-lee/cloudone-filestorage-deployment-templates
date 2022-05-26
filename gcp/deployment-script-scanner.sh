@@ -20,7 +20,7 @@ printInfo() {
 }
 
 printInfo
-echo "Will deploy file storage security protection unit, Ctrl-C to cancel..."
+echo "Will deploy file storage security protection unit scanner stack, Ctrl-C to cancel..."
 sleep 5
 
 PREVIEW_BUCKET_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
