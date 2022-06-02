@@ -82,6 +82,9 @@ gcloud pubsub subscriptions update $SCANNER_SUBSCRIPTION_ID \
   --max-delivery-attempts=5
 
 # Binding Pub/Sub service account
+gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC \
+    --member="serviceAccount:$SCANNER_SERVICE_ACCOUNT_ID@$SCANNER_PROJECT_ID.iam.gserviceaccount.com" \
+    --role='roles/pubsub.publisher'
 gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC_DLT \
     --member="serviceAccount:$PUBSUB_SERVICE_ACCOUNT"\
     --role="roles/pubsub.publisher"

@@ -1,17 +1,20 @@
 # Copyright (C) 2022 Trend Micro Inc. All rights reserved.
+import common
+
 
 def create_storage_stack_resources(context):
+    prefix = common.get_prefix(context, 'storage')
 
     scan_result_topic = {
-        'name': f'{context.env["deployment"]}-scan-result-topic',
+        'name': f'{prefix}-scan-result-topic',
         'type': 'pubsub.py',
         'properties': {
-            'name': f'{context.env["deployment"]}-scan-result-topic'
+            'name': f'{prefix}-scan-result-topic'
         }
     }
 
     bucket_listener = {
-        'name': f'{context.env["deployment"]}-bucket-listener',
+        'name': f'{prefix}-bucket-listener',
         'type': 'cloud_function.py',
         'properties': {
             'region': context.properties["region"],
@@ -43,7 +46,7 @@ def create_storage_stack_resources(context):
     }
 
     post_scan_action = {
-        'name': f'{context.env["deployment"]}-post-action-tag',
+        'name': f'{prefix}-post-action-tag',
         'type': 'cloud_function.py',
         'properties': {
             'region': context.properties["region"],
@@ -93,7 +96,7 @@ def create_storage_stack_resources(context):
         'value': '$(ref.{}.name)'.format(post_scan_action['name'])
     },{
         'name': 'region',
-        'value': context.properties["region"]
+        'value': context.properties['region']
     }]
     return (resources, outputs)
 
