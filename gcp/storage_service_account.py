@@ -31,7 +31,7 @@ def create_storage_service_account_resources(context):
         'name': f'{context.env["deployment"]}-post-action-tag-service-account',
         'type': 'gcp-types/iam-v1:projects.serviceAccounts',
         'properties': {
-            'accountId': f'{context.env["deployment"].lower()}-pat-sa',
+            'accountId': f'{prefix.lower()}-pat-sa',
             'displayName': 'Service Account for PostAction Tag Cloud Function',
         }
     }
