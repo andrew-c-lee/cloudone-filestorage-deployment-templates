@@ -1,40 +1,39 @@
 #!/bin/bash
 set -e
 
-while getopts s:d:r:i: args
+while getopts s:d:r:i:u: args
 do
-    case "${args}" in
-        s) SCANNING_BUCKET_NAME=${OPTARG};;
-        d) DEPLOYMENT_NAME_STORAGE=${OPTARG};;
-        r) REGION=${OPTARG};;
-        i) SCANNER_INFO_JSON=${OPTARG};;
-    esac
+  case "${args}" in
+    s) SCANNING_BUCKET_NAME=${OPTARG};;
+    d) DEPLOYMENT_NAME_STORAGE=${OPTARG};;
+    r) REGION=${OPTARG};;
+    i) SCANNER_INFO_JSON=${OPTARG};;
+    u) PACKAGE_URL=${OPTARG};;
+  esac
 done
 
-SCANNER_INFO_FILE='scanner-info'-$(cat /proc/sys/kernel/random/uuid).json
-echo $SCANNER_INFO_JSON > $SCANNER_INFO_FILE
 while IFS== read key value
 do
-    printf -v "$key" "$value"
-done < <(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' $SCANNER_INFO_FILE)
+  printf -v "$key" "$value"
+done < <(echo $SCANNER_INFO_JSON | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]')
 
 GCP_PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2> /dev/null)
 ARTIFACT_BUCKET_NAME='fss-artifact'-$(cat /proc/sys/kernel/random/uuid)
 
-printInfo() {
-  echo "Scanning bucket name: $SCANNING_BUCKET_NAME";
-  echo "Artifact bucket name: $ARTIFACT_BUCKET_NAME";
-  echo "Scanner info JSON: $SCANNER_INFO_JSON"
-  echo "Storage Deployment Name: $DEPLOYMENT_NAME_STORAGE";
-  echo "GCP Project ID: $GCP_PROJECT_ID";
-  echo "Region: $REGION";
-}
-
-printInfo
+echo "Scanning bucket name: $SCANNING_BUCKET_NAME";
+echo "Artifact bucket name: $ARTIFACT_BUCKET_NAME";
+echo "Scanner info JSON: $SCANNER_INFO_JSON"
+echo "Storage Deployment Name: $DEPLOYMENT_NAME_STORAGE";
+echo "GCP Project ID: $GCP_PROJECT_ID";
+echo "Region: $REGION";
+echo "Package URL: $PACKAGE_URL";
 echo "Will deploy file storage security protection unit storage stack, Ctrl-C to cancel..."
 sleep 5
 
-PREVIEW_BUCKET_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
+if [ -z "$PACKAGE_URL" ]; then
+  PACKAGE_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
+fi
+
 TEMPLATES_FILE='gcp-templates.zip'
 LISTENER_FILE='gcp-listener.zip'
 ACTION_TAG_FILE='gcp-action-tag.zip'
@@ -43,7 +42,7 @@ ACTION_TAG_FILE='gcp-action-tag.zip'
 gcloud deployment-manager deployments list > /dev/null
 
 # Download the templates package
-wget $PREVIEW_BUCKET_URL'gcp-templates/'$TEMPLATES_FILE
+wget $PACKAGE_URL'gcp-templates/'$TEMPLATES_FILE
 
 # Unzip the templates package
 unzip $TEMPLATES_FILE && rm $TEMPLATES_FILE
@@ -53,7 +52,7 @@ gsutil mb --pap enforced -b on gs://$ARTIFACT_BUCKET_NAME
 
 prepareArtifact() {
   # Download FSS functions artifacts
-  wget $PREVIEW_BUCKET_URL'cloud-functions/'$1
+  wget $PACKAGE_URL'cloud-functions/'$1
   # Upload functions artifacts to the artifact bucket
   gsutil cp $1 gs://$ARTIFACT_BUCKET_NAME/$1 && rm $1
 }
@@ -72,10 +71,10 @@ cat templates/storage.yaml
 # Deploy storage service account template
 gcloud deployment-manager deployments create $DEPLOYMENT_NAME_STORAGE --config templates/storage-service-account-role.yaml
 
-gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_STORAGE --format "json" >> $DEPLOYMENT_NAME_STORAGE"-role".json
+STORAGE_ROLE_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_STORAGE --format "json")
 
 searchStorageRoleJSONOutputs() {
-  cat $DEPLOYMENT_NAME_STORAGE"-role".json | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
+  echo $STORAGE_ROLE_DEPLOYMENT | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
 }
 
 BUCKET_LISTENER_ROLE_ID=$(searchStorageRoleJSONOutputs bucketListenerRoleID)
@@ -88,10 +87,10 @@ cat templates/storage.yaml
 # Update storage template
 gcloud deployment-manager deployments update $DEPLOYMENT_NAME_STORAGE --config templates/storage.yaml
 
-gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_STORAGE --format "json" >> $DEPLOYMENT_NAME_STORAGE.json
+STORAGE_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_STORAGE --format "json")
 
 searchStorageJSONOutputs() {
-  cat $DEPLOYMENT_NAME_STORAGE.json | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
+  echo $STORAGE_DEPLOYMENT | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
 }
 
 STORAGE_PROJECT_ID=$(searchStorageJSONOutputs storageProjectID)
@@ -107,15 +106,14 @@ gcloud pubsub topics add-iam-policy-binding $SCAN_RESULT_TOPIC --member="service
 gsutil rm -r gs://$ARTIFACT_BUCKET_NAME
 rm -rf templates
 
-printStorageInfo() {
-  STORAGE_INFO=$(jq --null-input \
-    --arg storageProjectID "$STORAGE_PROJECT_ID" \
-    --arg deploymentNameStorage "$DEPLOYMENT_NAME_STORAGE" \
-    '{"STORAGE_PROJECT_ID": $storageProjectID, "DEPLOYMENT_NAME_STORAGE": $deploymentNameStorage}')
-  echo $STORAGE_INFO > $DEPLOYMENT_NAME_STORAGE-storage-info.json
-  cat $DEPLOYMENT_NAME_STORAGE-storage-info.json
+printStorageJSON() {
+  STORAGE_JSON=$(jq --null-input \
+    --arg projectID "$STORAGE_PROJECT_ID" \
+    --arg deploymentName "$DEPLOYMENT_NAME_STORAGE" \
+    '{"projectID": $projectID, "deploymentName": $deploymentName}')
+  echo $STORAGE_JSON > $DEPLOYMENT_NAME_STORAGE.json
+  cat $DEPLOYMENT_NAME_STORAGE.json
 }
 
 echo "FSS Protection Unit Information:"
-printInfo
-printStorageInfo
+printStorageJSON

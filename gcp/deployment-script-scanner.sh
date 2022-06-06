@@ -1,29 +1,30 @@
 #!/bin/bash
 set -e
 
-while getopts d:r: args
+while getopts d:r:u: args
 do
-    case "${args}" in
-        d) DEPLOYMENT_NAME_SCANNER=${OPTARG};;
-        r) REGION=${OPTARG};;
-    esac
+  case "${args}" in
+    d) DEPLOYMENT_NAME_SCANNER=${OPTARG};;
+    r) REGION=${OPTARG};;
+    u) PACKAGE_URL=${OPTARG};;
+  esac
 done
 
 GCP_PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2> /dev/null)
 ARTIFACT_BUCKET_NAME='fss-artifact'-$(cat /proc/sys/kernel/random/uuid)
 
-printInfo() {
-  echo "Artifact bucket name: $ARTIFACT_BUCKET_NAME";
-  echo "Scanner Deployment Name: $DEPLOYMENT_NAME_SCANNER";
-  echo "GCP Project ID: $GCP_PROJECT_ID";
-  echo "Region: $REGION";
-}
-
-printInfo
+echo "Artifact bucket name: $ARTIFACT_BUCKET_NAME";
+echo "Scanner Deployment Name: $DEPLOYMENT_NAME_SCANNER";
+echo "GCP Project ID: $GCP_PROJECT_ID";
+echo "Region: $REGION";
+echo "Package URL: $PACKAGE_URL";
 echo "Will deploy file storage security protection unit scanner stack, Ctrl-C to cancel..."
 sleep 5
 
-PREVIEW_BUCKET_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
+if [ -z "$PACKAGE_URL" ]; then
+  PACKAGE_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
+fi
+
 TEMPLATES_FILE='gcp-templates.zip'
 SCANNER_FILE='gcp-scanner.zip'
 SCANNER_DLT_FILE='gcp-scanner-dlt.zip'
@@ -32,7 +33,7 @@ SCANNER_DLT_FILE='gcp-scanner-dlt.zip'
 gcloud deployment-manager deployments list > /dev/null
 
 # Download the templates package
-wget $PREVIEW_BUCKET_URL'gcp-templates/'$TEMPLATES_FILE
+wget $PACKAGE_URL'gcp-templates/'$TEMPLATES_FILE
 
 # Unzip the templates package
 unzip $TEMPLATES_FILE && rm $TEMPLATES_FILE
@@ -42,7 +43,7 @@ gsutil mb --pap enforced -b on gs://$ARTIFACT_BUCKET_NAME
 
 prepareArtifact() {
   # Download FSS functions artifacts
-  wget $PREVIEW_BUCKET_URL'cloud-functions/'$1
+  wget $PACKAGE_URL'cloud-functions/'$1
   # Upload functions artifacts to the artifact bucket
   gsutil cp $1 gs://$ARTIFACT_BUCKET_NAME/$1 && rm $1
 }
@@ -60,10 +61,10 @@ gcloud deployment-manager deployments create $DEPLOYMENT_NAME_SCANNER --config t
 # Update scanner template
 gcloud deployment-manager deployments update $DEPLOYMENT_NAME_SCANNER --config templates/scanner.yaml
 
-gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json" >> $DEPLOYMENT_NAME_SCANNER.json
+SCANNER_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json")
 
 searchScannerJSONOutputs() {
-  cat $DEPLOYMENT_NAME_SCANNER.json | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
+  echo $SCANNER_DEPLOYMENT | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
 }
 
 SCANNER_TOPIC=$(searchScannerJSONOutputs scannerTopic)
@@ -96,16 +97,25 @@ gcloud pubsub subscriptions add-iam-policy-binding $SCANNER_SUBSCRIPTION_ID \
 gsutil rm -r gs://$ARTIFACT_BUCKET_NAME
 rm -rf templates
 
+printScannerJSON() {
+  SCANNER_JSON=$(jq --null-input \
+    --arg projectID "$SCANNER_PROJECT_ID" \
+    --arg deploymentName "$DEPLOYMENT_NAME_SCANNER" \
+    '{"projectID": $projectID, "deploymentName": $deploymentName}')
+  echo $SCANNER_JSON > $DEPLOYMENT_NAME_SCANNER.json
+  cat $DEPLOYMENT_NAME_SCANNER.json
+}
+
 printScannerInfo() {
   SCANNER_INFO=$(jq --null-input \
     --arg scannerTopic "$SCANNER_TOPIC" \
     --arg scannerProjectID "$SCANNER_PROJECT_ID" \
     --arg scannerSAID "$SCANNER_SERVICE_ACCOUNT_ID" \
     '{"SCANNER_TOPIC": $scannerTopic, "SCANNER_PROJECT_ID": $scannerProjectID, "SCANNER_SERVICE_ACCOUNT_ID": $scannerSAID}')
-  echo $SCANNER_INFO > $DEPLOYMENT_NAME_SCANNER-scanner-info.json
-  cat $DEPLOYMENT_NAME_SCANNER-scanner-info.json
+  echo $SCANNER_INFO > $DEPLOYMENT_NAME_SCANNER-info.json
+  cat $DEPLOYMENT_NAME_SCANNER-info.json
 }
 
 echo "FSS Protection Unit Information:"
-printInfo
+printScannerJSON
 printScannerInfo
