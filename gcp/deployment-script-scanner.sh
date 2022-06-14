@@ -58,19 +58,38 @@ cat templates/scanner.yaml
 # Deploy scanner service account template
 gcloud deployment-manager deployments create $DEPLOYMENT_NAME_SCANNER --config templates/scanner-service-account-role.yaml
 
-# Update scanner template
-gcloud deployment-manager deployments update $DEPLOYMENT_NAME_SCANNER --config templates/scanner.yaml
-
 SCANNER_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json")
 
 searchScannerJSONOutputs() {
   echo $SCANNER_DEPLOYMENT | jq -r --arg v "$1" '.outputs[] | select(.name==$v).finalValue'
 }
 
-SCANNER_TOPIC=$(searchScannerJSONOutputs scannerTopic)
-SCANNER_TOPIC_DLT=$(searchScannerJSONOutputs scannerTopicDLT)
 SCANNER_PROJECT_ID=$(searchScannerJSONOutputs scannerProjectID)
 SCANNER_SERVICE_ACCOUNT_ID=$(searchScannerJSONOutputs scannerServiceAccountID)
+
+SECRET_STRING=$( jq -n \
+    --arg license '$eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3d3cudHJlbmRtaWNyby5jb20iLCJleHAiOjE2NjQ3Njk2MDAsIm5iZiI6MTY1NDA1MDU1NCwiaWF0IjoxNjU0MDUwNTU0LCJzdWIiOiJnY3AtcHJldmlldy1saWNlbnNlIiwiY2xvdWRPbmUiOnsiYWNjb3VudCI6IjU2NDUwNTA5NDE4NyJ9fQ.NTRBsm_A6dvG3BQIAZ2tX3IEcBmOD1jlFhf2AwfW_xaQcTnEYdrk5FT0-uG9lQf960j_l5olDWEEwVny7clzm7dhNOi3LqFOoF4h1_oly451u8LMmuj_rmm29hEA_5a4dYBtECkRZK5Pp0xw1chR7DaSz1_DGsLs5kqhdzyoiP3QGGy7vVhnYNHrZLhUNHrILr6ynJoPoSUlAz8szwZ7ZbTK9gMDfXCKVsy2afS0GTbzd4NhLqQf9bDSrNmBhcv3WWxRpSwA90i7V2V7xeOt8TFd22_GNe6uKDlpNYCZSE60f57_E23NgoPfcBAAo_h9r4ErhEEoWSAryWXr_cIpMwvhcNVvFmKNFraIkOP8l58v_2E85qxA_TrmJGd-kLcuoyE1IJVpZHJle6sAZEYyTwUBBxjs_N9nuHqSoO79pJj62VmED9XMsnqY8D8b8v8roazE5YqvPRgN5LqilCMeySQy1jJmmEiwl6k2z1-3SYKefr_j-Q1v_LpUJ9FudlylMLYyK9jUZXXDhO2jkd3zDt3xUybUpyh1CHmh9SYdZoW4yJrcVBvDI82s6quA4fL-akayoRRFHolveNDyUq78JoFwJBHJWMmrOcbAGSMfQfvYQs8Hq9_0ZnSYCIUjr4VxIWr2owWD87S9ISDSNscab03skfijAdEcVlZVIBa5MUo' \
+    --arg fssAPIEndpoint 'https://filestorage.us-1.cloudone.trendmicro.com/api/' \
+    '{LICENSE: $license, FSS_API_ENDPOINT: $fssAPIEndpoint}' )
+
+# Create scanner secrets environment variable
+echo -n "$SECRET_STRING" | \
+  gcloud secrets create $DEPLOYMENT_NAME_SCANNER-scanner-secrets --data-file=-
+
+# Allow scanner service account to access the secrets
+gcloud secrets add-iam-policy-binding $DEPLOYMENT_NAME_SCANNER-scanner-secrets \
+    --member="serviceAccount:$SCANNER_SERVICE_ACCOUNT_ID@$SCANNER_PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+
+sed -i "s/<SCANNER_SECRETS>/$DEPLOYMENT_NAME_SCANNER-scanner-secrets/g" templates/scanner.yaml
+
+# Update scanner template
+gcloud deployment-manager deployments update $DEPLOYMENT_NAME_SCANNER --config templates/scanner.yaml
+
+SCANNER_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json")
+
+SCANNER_TOPIC=$(searchScannerJSONOutputs scannerTopic)
+SCANNER_TOPIC_DLT=$(searchScannerJSONOutputs scannerTopicDLT)
 
 SCANNER_PROJECT_NUMBER=$(gcloud projects list --filter=$SCANNER_PROJECT_ID --format="value(PROJECT_NUMBER)")
 PUBSUB_SERVICE_ACCOUNT="service-$SCANNER_PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com"
@@ -79,8 +98,8 @@ SCANNER_SUBSCRIPTION_ID=${SUBSCRIPTIONS#*/*/*/}
 
 # Update scanner topic dead letter config
 gcloud pubsub subscriptions update $SCANNER_SUBSCRIPTION_ID \
-  --dead-letter-topic=$SCANNER_TOPIC_DLT \
-  --max-delivery-attempts=5
+    --dead-letter-topic=$SCANNER_TOPIC_DLT \
+    --max-delivery-attempts=5
 
 # Binding Pub/Sub service account
 gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC \

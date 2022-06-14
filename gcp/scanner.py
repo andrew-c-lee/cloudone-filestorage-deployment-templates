@@ -28,9 +28,16 @@ def create_scanner_stack_resources(context):
                 'LD_LIBRARY_PATH': '/workspace:/workspace/lib',
                 'PATTERN_PATH': './patterns',
                 'PROJECT_ID': context.env['project'],
-                'LICENSE': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3d3cudHJlbmRtaWNyby5jb20iLCJleHAiOjE2NjQ3Njk2MDAsIm5iZiI6MTY1NDA1MDU1NCwiaWF0IjoxNjU0MDUwNTU0LCJzdWIiOiJnY3AtcHJldmlldy1saWNlbnNlIiwiY2xvdWRPbmUiOnsiYWNjb3VudCI6IjU2NDUwNTA5NDE4NyJ9fQ.NTRBsm_A6dvG3BQIAZ2tX3IEcBmOD1jlFhf2AwfW_xaQcTnEYdrk5FT0-uG9lQf960j_l5olDWEEwVny7clzm7dhNOi3LqFOoF4h1_oly451u8LMmuj_rmm29hEA_5a4dYBtECkRZK5Pp0xw1chR7DaSz1_DGsLs5kqhdzyoiP3QGGy7vVhnYNHrZLhUNHrILr6ynJoPoSUlAz8szwZ7ZbTK9gMDfXCKVsy2afS0GTbzd4NhLqQf9bDSrNmBhcv3WWxRpSwA90i7V2V7xeOt8TFd22_GNe6uKDlpNYCZSE60f57_E23NgoPfcBAAo_h9r4ErhEEoWSAryWXr_cIpMwvhcNVvFmKNFraIkOP8l58v_2E85qxA_TrmJGd-kLcuoyE1IJVpZHJle6sAZEYyTwUBBxjs_N9nuHqSoO79pJj62VmED9XMsnqY8D8b8v8roazE5YqvPRgN5LqilCMeySQy1jJmmEiwl6k2z1-3SYKefr_j-Q1v_LpUJ9FudlylMLYyK9jUZXXDhO2jkd3zDt3xUybUpyh1CHmh9SYdZoW4yJrcVBvDI82s6quA4fL-akayoRRFHolveNDyUq78JoFwJBHJWMmrOcbAGSMfQfvYQs8Hq9_0ZnSYCIUjr4VxIWr2owWD87S9ISDSNscab03skfijAdEcVlZVIBa5MUo',
                 'SUBJECT': 'gcp-preview-license',
             },
+            'secretEnvironmentVariables': [
+                {
+                    'key': 'SCANNER_SECRETS',
+                    'projectId': context.env['project'],
+                    'secret': f'{context.properties["scannerSecretsName"]}',
+                    'version': 'latest'
+                }
+            ],
             'retryOnFailure': True,
         },
         'metadata': {
@@ -87,6 +94,9 @@ def create_scanner_stack_resources(context):
     },{
         'name': 'region',
         'value': context.properties["region"]
+    },{
+        'name': 'scannerSecretsName',
+        'value': context.properties["scannerSecretsName"]
     }]
     return (resources, outputs)
 
