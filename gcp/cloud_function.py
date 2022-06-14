@@ -179,7 +179,8 @@ def create_function_resource(context):
                            'maxInstances',
                            'availableMemoryMb',
                            'description',
-                           'serviceAccountEmail']
+                           'serviceAccountEmail',
+                           'secretEnvironmentVariables']
 
     for prop in optional_properties:
         append_optional_property(function, properties, prop)

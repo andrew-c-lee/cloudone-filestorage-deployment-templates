@@ -19,6 +19,9 @@ def create_scanner_service_account_resources(context):
     outputs = [{
         'name':  'scannerServiceAccountID',
         'value': scanner_service_account['properties']['accountId']
+    },{
+        'name': 'scannerProjectID',
+        'value': context.env['project']
     }]
     return (resources, outputs)
 

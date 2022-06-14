@@ -17,6 +17,7 @@ resources:
     region: <REGION>
     artifactBucket: <ARTIFACT_BUCKET_NAME>
     scannerServiceAccountID: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+    scannerSecretsName: <SCANNER_SECRETS>
   metadata:
     dependsOn:
     - scanner-stack-service-account
@@ -36,3 +37,5 @@ outputs:
     value: $(ref.scanner-stack.scannerDLTFunctionName)
   - name: scannerServiceAccountID
     value: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+  - name: scannerSecretsName
+    value: $(ref.scanner-stack.scannerSecretsName)
