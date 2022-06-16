@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-while getopts s:d:r:i:u: args
+while getopts s:d:r:i:u:k: args
 do
   case "${args}" in
     s) SCANNING_BUCKET_NAME=${OPTARG};;
@@ -9,6 +9,7 @@ do
     r) REGION=${OPTARG};;
     i) SCANNER_INFO_JSON=${OPTARG};;
     u) PACKAGE_URL=${OPTARG};;
+    k) REPORT_OBJECT_KEY=${OPTARG};;
   esac
 done
 
@@ -27,11 +28,16 @@ echo "Storage Deployment Name: $DEPLOYMENT_NAME_STORAGE";
 echo "GCP Project ID: $GCP_PROJECT_ID";
 echo "Region: $REGION";
 echo "Package URL: $PACKAGE_URL";
+echo "Report Object Key: $REPORT_OBJECT_KEY";
 echo "Will deploy file storage security protection unit storage stack, Ctrl-C to cancel..."
 sleep 5
 
 if [ -z "$PACKAGE_URL" ]; then
   PACKAGE_URL='https://file-storage-security-preview.s3.amazonaws.com/latest/'
+fi
+
+if [ -z "$REPORT_OBJECT_KEY" ]; then
+  REPORT_OBJECT_KEY='False'
 fi
 
 TEMPLATES_FILE='gcp-templates.zip'
@@ -66,6 +72,8 @@ sed -i "s/scanningBucket:.*/scanningBucket: $SCANNING_BUCKET_NAME/" templates/st
 sed -i "s/scannerTopic:.*/scannerTopic: $SCANNER_TOPIC/" templates/storage.yaml
 sed -i "s/scannerProjectID:.*/scannerProjectID: $SCANNER_PROJECT_ID/" templates/storage.yaml
 sed -i "s/scannerServiceAccountID:.*/scannerServiceAccountID: $SCANNER_SERVICE_ACCOUNT_ID/" templates/storage.yaml
+sed -i "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_STORAGE/g" templates/storage.yaml
+sed -i "s/<REPORT_OBJECT_KEY>/$REPORT_OBJECT_KEY/g" templates/storage.yaml
 cat templates/storage.yaml
 
 # Deploy storage service account template

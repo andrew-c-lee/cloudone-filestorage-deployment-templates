@@ -14,6 +14,7 @@ resources:
 - name: scanner-stack
   type: scanner.py
   properties:
+    deploymentName: <DEPLOYMENT_NAME>
     region: <REGION>
     artifactBucket: <ARTIFACT_BUCKET_NAME>
     scannerServiceAccountID: $(ref.scanner-stack-service-account.scannerServiceAccountID)
