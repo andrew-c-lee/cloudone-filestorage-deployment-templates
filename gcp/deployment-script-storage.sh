@@ -72,9 +72,13 @@ prepareArtifact $ACTION_TAG_FILE
 # Deploy or update File Storage Security roles
 echo "Deploying File Storage Security roles..."
 FSS_ROLES_DEPLOYMENT='file-storage-security-roles'
-([[ "DONE" == $(gcloud deployment-manager deployments describe $FSS_ROLES_DEPLOYMENT --format json | jq -r '.deployment.operation.status') ]] \
-  && gcloud deployment-manager deployments update $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml) \
+# Deploy the roles if they don't exist
+roleDeployment=$(gcloud deployment-manager deployments describe $FSS_ROLES_DEPLOYMENT --format json) \
   || gcloud deployment-manager deployments create $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml
+# Update the roles if they are not being updated
+([[ ! -z "$roleDeployment" && "DONE" == $(echo "$roleDeployment" | jq -r '.deployment.operation.status') ]] \
+  && gcloud deployment-manager deployments update $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml) \
+  || echo "$FSS_ROLES_DEPLOYMENT is updating. Skip updating the roles."
 
 sed -i.bak "s/<REGION>/$REGION/g" templates/storage.yaml
 sed -i.bak "s/<ARTIFACT_BUCKET_NAME>/$ARTIFACT_BUCKET_NAME/g" templates/storage.yaml
