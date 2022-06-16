@@ -1,26 +1,18 @@
 # Copyright (C) 2022 Trend Micro Inc. All rights reserved.
 
 imports:
-  - path: storage_role.py
-  - path: storage_service_account.py
-  - path: cloud_function.py
-  - path: pubsub.py
-  - path: storage.py
   - path: common.py
+  - path: management_roles.py
+  - path: role.py
+  - path: storage.py
+  - path: storage_stack_service_accounts.py
+  - path: storage_stack_roles.py
 
 resources:
-- name: storage-stack-role
-  type: storage_role.py
+- name: storage-stack-service-accounts
+  type: storage_stack_service_accounts.py
   properties:
-    action: update
-    blRoleID: <BUCKET_LISTENER_ROLE_ID>
-    patRoleID: <POST_ACTION_TAG_ROLE_ID>
-
-- name: storage-stack-service-account
-  type: storage_service_account.py
-  properties:
-    bucketListenerRoleID: $(ref.storage-stack-role.bucketListenerRoleID)
-    postActionTagRoleID: $(ref.storage-stack-role.postActionTagRoleID)
+    managementServiceAccountID: <MANAGEMENT_SERVICE_ACCOUNT_ID>
 
 - name: storage-stack
   type: storage.py
@@ -32,10 +24,8 @@ resources:
     scannerTopic: <SCANNER_TOPIC>
     scannerProjectID: <SCANNER_PROJECT_ID>
     scannerServiceAccountID: <SCANNER_SERVICE_ACCOUNT_ID>
-    bucketListenerServiceAccountID: $(ref.storage-stack-service-account.bucketListenerServiceAccountID)
-    postActionTagServiceAccountID: $(ref.storage-stack-service-account.postActionTagServiceAccountID)
-    postActionTagRoleID: $(ref.storage-stack-role.postActionTagRoleID)
-    reportObjectKey: <REPORT_OBJECT_KEY>
+    reportObjectKey: '<REPORT_OBJECT_KEY>'
+    managementServiceAccountID: <MANAGEMENT_SERVICE_ACCOUNT_ID>
 
 outputs:
   - name: region
@@ -45,13 +35,13 @@ outputs:
   - name: bucketListenerSourceArchiveUrl
     value: $(ref.storage-stack.bucketListenerSourceArchiveUrl)
   - name: bucketListenerServiceAccountID
-    value: $(ref.storage-stack-service-account.bucketListenerServiceAccountID)
+    value: $(ref.storage-stack-service-accounts.bucketListenerServiceAccountID)
   - name: bucketListenerRoleID
-    value: $(ref.storage-stack-role.bucketListenerRoleID)
+    value: $(ref.storage-stack.fssBucketListeneRoleID)
   - name: postActionTagServiceAccountID
-    value: $(ref.storage-stack-service-account.postActionTagServiceAccountID)
+    value: $(ref.storage-stack-service-accounts.postActionTagServiceAccountID)
   - name: postActionTagRoleID
-    value: $(ref.storage-stack-role.postActionTagRoleID)
+    value: $(ref.storage-stack.fssPostActionTagRoleID)
   - name: scanResultTopic
     value: $(ref.storage-stack.scanResultTopic)
   - name: bucketListenerFunctionName

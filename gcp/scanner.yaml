@@ -1,15 +1,17 @@
 # Copyright (C) 2022 Trend Micro Inc. All rights reserved.
 
 imports:
-  - path: cloud_function.py
-  - path: pubsub.py
-  - path: scanner.py
-  - path: scanner_service_account.py
   - path: common.py
+  - path: management_roles.py
+  - path: role.py
+  - path: scanner.py
+  - path: scanner_stack_service_accounts.py
 
 resources:
-- name: scanner-stack-service-account
-  type: scanner_service_account.py
+- name: scanner-stack-service-accounts
+  type: scanner_stack_service_accounts.py
+  properties:
+    managementServiceAccountID: <MANAGEMENT_SERVICE_ACCOUNT_ID>
 
 - name: scanner-stack
   type: scanner.py
@@ -17,11 +19,8 @@ resources:
     deploymentName: <DEPLOYMENT_NAME>
     region: <REGION>
     artifactBucket: <ARTIFACT_BUCKET_NAME>
-    scannerServiceAccountID: $(ref.scanner-stack-service-account.scannerServiceAccountID)
     scannerSecretsName: <SCANNER_SECRETS>
-  metadata:
-    dependsOn:
-    - scanner-stack-service-account
+    managementServiceAccountID: <MANAGEMENT_SERVICE_ACCOUNT_ID>
 
 outputs:
   - name: region
@@ -37,6 +36,6 @@ outputs:
   - name: scannerDLTFunctionName
     value: $(ref.scanner-stack.scannerDLTFunctionName)
   - name: scannerServiceAccountID
-    value: $(ref.scanner-stack-service-account.scannerServiceAccountID)
+    value: $(ref.scanner-stack-service-accounts.scannerServiceAccountID)
   - name: scannerSecretsName
     value: $(ref.scanner-stack.scannerSecretsName)

@@ -1,69 +1,151 @@
 # Copyright (C) 2022 Trend Micro Inc. All rights reserved.
 import common
+import management_roles
+import role
 
 def create_scanner_stack_resources(context):
     prefix = common.get_prefix(context, 'scanner')
 
+    properties = context.properties
+
+    project_id = context.env['project']
+    region = properties['region']
+    management_service_account_id = properties['managementServiceAccountID']
+
+    scanner_topic_name = f'{prefix}-scanner-topic'
     scanner_topic = {
-        'name': f'{prefix}-scanner-topic',
-        'type': 'pubsub.py',
+        'name': scanner_topic_name,
+        'type': 'pubsub.v1.topic',
         'properties': {
-            'name': f'{prefix}-scanner-topic'
+            'name': f"projects/{project_id}/topics/{scanner_topic_name}",
+            'topic': scanner_topic_name
+        },
+        'accessControl': {
+            'gcpIamPolicy': {
+                'bindings': [
+                    {
+                        'role': role.get_role_name_ref(project_id, management_roles.PUBSUB_MANAGEMENT_ROLE),
+                        'members': [
+                            f"serviceAccount:{management_service_account_id}"
+                        ]
+                    },
+                    {
+                        'role': role.get_role_name_ref(project_id, management_roles.PUBSUB_IAM_MANAGEMENT_ROLE),
+                        'members': [
+                            f"serviceAccount:{management_service_account_id}"
+                        ]
+                    },
+                    {
+                        'role': 'roles/pubsub.publisher',
+                        'members': [
+                            f'serviceAccount:$(ref.{prefix}-scanner-service-account.email)',
+                        ]
+                    }
+                ]
+            }
         }
     }
 
     scanner = {
         'name': f'{prefix}-scanner',
-        'type': 'cloud_function.py',
+        # https://cloud.google.com/functions/docs/reference/rest/v1/projects.locations.functions
+        'type': 'gcp-types/cloudfunctions-v1:projects.locations.functions',
         'properties': {
-            'region': context.properties['region'],
-            'sourceArchiveUrl': f'gs://{context.properties["artifactBucket"]}/gcp-scanner.zip',
+            'parent': f'projects/{project_id}/locations/{region}',
+            'function': f'{prefix}-scanner',
             'entryPoint': 'main',
-            'serviceAccountEmail': f'{context.properties["scannerServiceAccountID"]}@{context.env["project"]}.iam.gserviceaccount.com',
+            'sourceArchiveUrl': f"gs://{properties['artifactBucket']}/gcp-scanner.zip",
+            'serviceAccountEmail': f'$(ref.{prefix}-scanner-service-account.email)',
             'runtime': 'python38',
             'availableMemoryMb': 2048,
             'timeout': '120s',
-            'triggerTopic': scanner_topic['name'],
             'environmentVariables': {
                 'LD_LIBRARY_PATH': '/workspace:/workspace/lib',
                 'PATTERN_PATH': './patterns',
-                'PROJECT_ID': context.env['project'],
+                'PROJECT_ID': project_id,
                 'SUBJECT': 'gcp-preview-license',
                 'DEPLOYMENT_NAME': context.properties['deploymentName']
             },
             'secretEnvironmentVariables': [
                 {
                     'key': 'SCANNER_SECRETS',
-                    'projectId': context.env['project'],
-                    'secret': f'{context.properties["scannerSecretsName"]}',
+                    'projectId': project_id,
+                    'secret': f'{properties["scannerSecretsName"]}',
                     'version': 'latest'
                 }
             ],
-            'retryOnFailure': True,
+            'eventTrigger': {
+                'eventType': 'providers/cloud.pubsub/eventTypes/topic.publish',
+                'resource': f"projects/{project_id}/topics/{scanner_topic['name']}",
+                'failurePolicy': {
+                    'retry': {}
+                }
+            }
         },
         'metadata': {
             'dependsOn': [scanner_topic['name']]
         }
     }
 
-    scanner_topic_dlt = {
-        'name': f'{prefix}-scanner-topic-dlt',
-        'type': 'pubsub.py',
+    scanner_management_account_role_binding = {
+        'name': 'scanner-management-account-role-binding',
+        'type': 'gcp-types/cloudfunctions-v1:virtual.projects.locations.functions.iamMemberBinding',
         'properties': {
-            'name': f'{prefix}-scanner-topic-dlt'
+            'resource': f"$(ref.{scanner['name']}.name)",
+            'role': role.get_role_name_ref(project_id, management_roles.CLOUD_FUNCTION_MANAGEMENT_ROLE),
+            'member': f'serviceAccount:{management_service_account_id}'
+        }
+    }
+
+    scanner_topic_dlt_name = f'{prefix}-scanner-topic-dlt'
+    scanner_topic_dlt = {
+        'name': scanner_topic_dlt_name,
+        'type': 'pubsub.v1.topic',
+        'properties': {
+            'name': f"projects/{project_id}/topics/{scanner_topic_dlt_name}",
+            'topic': scanner_topic_dlt_name
+        },
+        'accessControl': {
+            'gcpIamPolicy': {
+                'bindings': [
+                    {
+                        'role': role.get_role_name_ref(project_id, management_roles.PUBSUB_MANAGEMENT_ROLE),
+                        'members': [
+                            f"serviceAccount:{management_service_account_id}"
+                        ]
+                    },
+                    {
+                        'role': role.get_role_name_ref(project_id, management_roles.PUBSUB_IAM_MANAGEMENT_ROLE),
+                        'members': [
+                            f"serviceAccount:{management_service_account_id}"
+                        ]
+                    },
+                    {
+                        'role': 'roles/pubsub.publisher',
+                        'members': [
+                            f"serviceAccount:service-{context.env['project_number']}@gcp-sa-pubsub.iam.gserviceaccount.com",
+                        ]
+                    }
+                ]
+            }
         }
     }
 
     scanner_dlt = {
         'name': f'{prefix}-scanner-dlt',
-        'type': 'cloud_function.py',
+        # https://cloud.google.com/functions/docs/reference/rest/v1/projects.locations.functions
+        'type': 'gcp-types/cloudfunctions-v1:projects.locations.functions',
         'properties': {
-            'region': context.properties["region"],
-            'sourceArchiveUrl': f'gs://{context.properties["artifactBucket"]}/gcp-scanner-dlt.zip',
+            'parent': f'projects/{project_id}/locations/{region}',
+            'function': f'{prefix}-scanner-dlt',
             'entryPoint': 'main',
-            'serviceAccountEmail': f'{context.properties["scannerServiceAccountID"]}@{context.env["project"]}.iam.gserviceaccount.com',
+            'sourceArchiveUrl': f"gs://{properties['artifactBucket']}/gcp-scanner-dlt.zip",
+            'serviceAccountEmail': f'$(ref.{prefix}-scanner-service-account.email)',
             'runtime': 'python38',
-            'triggerTopic': scanner_topic_dlt['name'],
+            'eventTrigger': {
+                'eventType': 'providers/cloud.pubsub/eventTypes/topic.publish',
+                'resource': f"projects/{project_id}/topics/{scanner_topic_dlt['name']}",
+            },
             'environmentVariables': {}
         },
         'metadata': {
@@ -71,11 +153,23 @@ def create_scanner_stack_resources(context):
         }
     }
 
+    scanner_dlt_management_account_role_binding = {
+        'name': 'scanner-dlt-management-account-role-binding',
+        'type': 'gcp-types/cloudfunctions-v1:virtual.projects.locations.functions.iamMemberBinding',
+        'properties': {
+            'resource': f"$(ref.{scanner_dlt['name']}.name)",
+            'role': role.get_role_name_ref(project_id, management_roles.CLOUD_FUNCTION_MANAGEMENT_ROLE),
+            'member': f'serviceAccount:{management_service_account_id}'
+        }
+    }
+
     resources = [
         scanner,
         scanner_dlt,
         scanner_topic,
-        scanner_topic_dlt
+        scanner_topic_dlt,
+        scanner_management_account_role_binding,
+        scanner_dlt_management_account_role_binding
     ]
     outputs = [{
         'name': 'scannerTopic',
@@ -85,7 +179,7 @@ def create_scanner_stack_resources(context):
         'value': scanner_topic_dlt['name']
     },{
         'name': 'scannerProjectID',
-        'value': context.env['project']
+        'value': project_id
     },{
         'name': 'scannerFunctionName',
         'value': '$(ref.{}.name)'.format(scanner['name'])
@@ -94,10 +188,10 @@ def create_scanner_stack_resources(context):
         'value': '$(ref.{}.name)'.format(scanner_dlt['name'])
     },{
         'name': 'region',
-        'value': context.properties["region"]
+        'value': region
     },{
         'name': 'scannerSecretsName',
-        'value': context.properties["scannerSecretsName"]
+        'value': properties['scannerSecretsName']
     }]
     return (resources, outputs)
 
