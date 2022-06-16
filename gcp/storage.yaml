@@ -25,6 +25,7 @@ resources:
 - name: storage-stack
   type: storage.py
   properties:
+    deploymentName: <DEPLOYMENT_NAME>
     region: <REGION>
     scanningBucket: <SCANNING_BUCKET_NAME>
     artifactBucket: <ARTIFACT_BUCKET_NAME>
@@ -34,6 +35,7 @@ resources:
     bucketListenerServiceAccountID: $(ref.storage-stack-service-account.bucketListenerServiceAccountID)
     postActionTagServiceAccountID: $(ref.storage-stack-service-account.postActionTagServiceAccountID)
     postActionTagRoleID: $(ref.storage-stack-role.postActionTagRoleID)
+    reportObjectKey: <REPORT_OBJECT_KEY>
 
 outputs:
   - name: region

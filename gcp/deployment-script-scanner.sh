@@ -53,6 +53,7 @@ prepareArtifact $SCANNER_DLT_FILE
 
 sed -i "s/region:.*/region: $REGION/" templates/scanner.yaml
 sed -i "s/artifactBucket:.*/artifactBucket: $ARTIFACT_BUCKET_NAME/" templates/scanner.yaml
+sed -i "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_SCANNER/g" templates/scanner.yaml
 cat templates/scanner.yaml
 
 # Deploy scanner service account template

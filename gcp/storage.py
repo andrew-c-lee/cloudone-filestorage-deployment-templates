@@ -29,7 +29,9 @@ def create_storage_stack_resources(context):
             'environmentVariables': {
                 'SCANNER_PUBSUB_TOPIC': context.properties['scannerTopic'],
                 'SCANNER_PROJECT_ID': context.properties['scannerProjectID'],
-                'SCAN_RESULT_TOPIC': f'projects/{context.env["project"]}/topics/{scan_result_topic["name"]}'
+                'SCAN_RESULT_TOPIC': f'projects/{context.env["project"]}/topics/{scan_result_topic["name"]}',
+                'DEPLOYMENT_NAME': context.properties['deploymentName'],
+                'REPORT_OBJECT_KEY': context.properties['reportObjectKey']
             },
             'retryOnFailure': True,
         }
