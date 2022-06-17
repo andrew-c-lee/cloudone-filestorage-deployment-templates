@@ -40,9 +40,10 @@ Specify the following fields and execute the deployment script in cloud shell:
 1. Stack name: Specify the prefix of this deployment. Please keep it under 22 characters.
 2. Scanning bucket name: Specify the existing bucket name that you wish to protect.
 3. Region: Specify the region of your bucket. For the list of supported GCP region, please see [Supported GCP Regions](https://cloudone.trendmicro.com/docs/file-storage-security/).
+4. Service account: Copy and paste the service account information for the File Storage Security console.
 
 ```sh
-./deployment-script.sh -d <STACK_NAME> -s <SCANNING_BUCKET_NAME> -r <REGION>
+./deployment-script.sh -d <STACK_NAME> -s <SCANNING_BUCKET_NAME> -r <REGION> -m <SERVICE_ACCOUNT>
 ```
 
 ## Configure JSON in File Storage Security console
