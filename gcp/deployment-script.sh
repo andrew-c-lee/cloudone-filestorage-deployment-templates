@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-while getopts s:d:r:u:k:m: args
+while getopts s:d:r:u:k:m:c: args
 do
   case "${args}" in
     s) SCANNING_BUCKET_NAME=${OPTARG};;
@@ -10,6 +10,7 @@ do
     u) PACKAGE_URL=${OPTARG};;
     k) REPORT_OBJECT_KEY=${OPTARG};;
     m) MANAGEMENT_SERVICE_ACCOUNT=${OPTARG};;
+    c) CLOUD_ONE_REGION=${OPTARG};;
   esac
 done
 
@@ -27,5 +28,9 @@ else
   REPORT_OBJECT_KEY=$(echo ${REPORT_OBJECT_KEY:0:1} | tr '[a-z]' '[A-Z]')${REPORT_OBJECT_KEY:1}
 fi
 
-bash deployment-script-scanner.sh -d $DEPLOYMENT_NAME_SCANNER -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -u $PACKAGE_URL
+if [ -z "$CLOUD_ONE_REGION" ]; then
+  CLOUD_ONE_REGION='us-1'
+fi
+
+bash deployment-script-scanner.sh -d $DEPLOYMENT_NAME_SCANNER -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -u $PACKAGE_URL -c $CLOUD_ONE_REGION
 bash deployment-script-storage.sh -s $SCANNING_BUCKET_NAME -d $DEPLOYMENT_NAME_STORAGE -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -i "$(cat $DEPLOYMENT_NAME_SCANNER-info.json)" -u $PACKAGE_URL -k $REPORT_OBJECT_KEY
