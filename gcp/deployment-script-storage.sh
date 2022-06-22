@@ -41,6 +41,9 @@ fi
 
 if [ -z "$REPORT_OBJECT_KEY" ]; then
   REPORT_OBJECT_KEY='False'
+else
+  REPORT_OBJECT_KEY=$(echo $REPORT_OBJECT_KEY | tr '[:upper:]' '[:lower:]')
+  REPORT_OBJECT_KEY=$(echo ${REPORT_OBJECT_KEY:0:1} | tr '[a-z]' '[A-Z]')${REPORT_OBJECT_KEY:1}
 fi
 
 TEMPLATES_FILE='gcp-templates.zip'
