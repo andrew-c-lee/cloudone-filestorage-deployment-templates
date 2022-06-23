@@ -59,7 +59,7 @@ def create_role_resource(context):
             'roleId': role_id,
             'role':{
                 'title': properties['title'],
-                'description': f"File storage security {resource_name.replace('-', ' ').replace('_', ' ').replace('fss ', '')}",
+                'description': f"Trend Micro File Storage Security {resource_name.replace('-', ' ').replace('_', ' ').replace('fss ', '')}",
                 'stage': 'GA',
                 'includedPermissions': properties['permissions']
             }
