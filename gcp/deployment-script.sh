@@ -34,3 +34,13 @@ fi
 
 bash deployment-script-scanner.sh -d $DEPLOYMENT_NAME_SCANNER -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -u $PACKAGE_URL -c $CLOUD_ONE_REGION
 bash deployment-script-storage.sh -s $SCANNING_BUCKET_NAME -d $DEPLOYMENT_NAME_STORAGE -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -i "$(cat $DEPLOYMENT_NAME_SCANNER-info.json)" -u $PACKAGE_URL -k $REPORT_OBJECT_KEY
+
+echo "The stacks have been deployed successfully. Below is the content required to configure on File Storage Security console."
+
+echo "--- Content of $DEPLOYMENT_NAME_SCANNER.json ---"
+cat $DEPLOYMENT_NAME_SCANNER.json
+echo "--- End of the content ---"
+echo ""
+echo "--- Content of $DEPLOYMENT_NAME_STORAGE.json ---"
+cat $DEPLOYMENT_NAME_STORAGE.json
+echo "--- End of the content ---"

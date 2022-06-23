@@ -124,5 +124,8 @@ printStorageJSON() {
   cat $DEPLOYMENT_NAME_STORAGE.json
 }
 
-echo "FSS Protection Unit Information:"
+echo "The storage stack has been deployed successfully. Below is the content required to configure on File Storage Security console."
+
+echo "--- Content of $DEPLOYMENT_NAME_STORAGE.json ---"
 printStorageJSON
+echo "--- End of the content ---"
