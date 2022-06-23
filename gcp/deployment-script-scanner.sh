@@ -61,7 +61,7 @@ prepareArtifact $SCANNER_DLT_FILE
 
 # Deploy or update File Storage Security roles
 echo "Deploying File Storage Security roles..."
-FSS_ROLES_DEPLOYMENT='file-storage-security-roles'
+FSS_ROLES_DEPLOYMENT='trend-micro-file-storage-security-roles'
 # Deploy the roles if they don't exist
 roleDeployment=$(gcloud deployment-manager deployments describe $FSS_ROLES_DEPLOYMENT --format json) \
   || gcloud deployment-manager deployments create $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml

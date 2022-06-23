@@ -1,13 +1,13 @@
 # Copyright (C) 2022 Trend Micro Inc. All rights reserved.
 import role
 
-CLOUD_FUNCTION_MANAGEMENT_ROLE = 'fss-cloud-function-management-role'
-DEPLOYMENT_MANAGEMENT_ROLE = 'fss-deployment-management-role'
-LOG_MANAGEMENT_ROLE = 'fss-log-management-role'
-PUBSUB_IAM_MANAGEMENT_ROLE = 'fss-pubsub-iam-management-role'
-PUBSUB_MANAGEMENT_ROLE = 'fss-pubsub-management-role'
-SECRET_MANAGEMENT_ROLE = 'fss-secret-management-role'
-SERVICE_ACCOUNT_MANAGEMENT_ROLE = 'fss-service-account-management'
+CLOUD_FUNCTION_MANAGEMENT_ROLE = 'trend-micro-fss-cloud-function-management-role'
+DEPLOYMENT_MANAGEMENT_ROLE = 'trend-micro-fss-deployment-management-role'
+LOG_MANAGEMENT_ROLE = 'trend-micro-fss-log-management-role'
+PUBSUB_IAM_MANAGEMENT_ROLE = 'trend-micro-fss-pubsub-iam-management-role'
+PUBSUB_MANAGEMENT_ROLE = 'trend-micro-fss-pubsub-management-role'
+SECRET_MANAGEMENT_ROLE = 'trend-micro-fss-secret-management-role'
+SERVICE_ACCOUNT_MANAGEMENT_ROLE = 'trend-micro-fss-service-account-management-role'
 
 roles = {
     CLOUD_FUNCTION_MANAGEMENT_ROLE: {
