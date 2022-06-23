@@ -64,7 +64,6 @@ def create_scanner_stack_resources(context):
                 'PATTERN_PATH': './patterns',
                 'PROJECT_ID': project_id,
                 'REGION': region,
-                'SUBJECT': 'gcp-preview-license',
                 'DEPLOYMENT_NAME': properties['deploymentName']
             },
             'secretEnvironmentVariables': [

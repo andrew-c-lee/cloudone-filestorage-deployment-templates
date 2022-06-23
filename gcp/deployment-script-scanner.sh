@@ -157,5 +157,10 @@ printScannerInfo() {
 }
 
 echo "FSS Protection Unit Information:"
-printScannerJSON
 printScannerInfo
+
+echo "The scanner stack has been deployed successfully. Below is the content required to configure on File Storage Security console."
+
+echo "--- Content of $DEPLOYMENT_NAME_SCANNER.json ---"
+printScannerJSON
+echo "--- End of the content ---"
