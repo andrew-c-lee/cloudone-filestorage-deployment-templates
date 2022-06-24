@@ -109,7 +109,7 @@ SCAN_RESULT_TOPIC=$(searchStorageJSONOutputs scanResultTopic)
 
 # Binding service account and role on Pub/Sub Topics.
 # TODO Can be removed after backend API is ready
-gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC --member="serviceAccount:$BUCKET_LISTENER_SERVICE_ACCOUNT_ID@$STORAGE_PROJECT_ID.iam.gserviceaccount.com" --role='roles/pubsub.publisher'
+gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC --member="serviceAccount:$BUCKET_LISTENER_SERVICE_ACCOUNT_ID@$STORAGE_PROJECT_ID.iam.gserviceaccount.com" --role='roles/pubsub.publisher' --project $SCANNER_PROJECT_ID
 
 # Remove the artifact bucket
 gsutil rm -r gs://$ARTIFACT_BUCKET_NAME
