@@ -3,7 +3,8 @@
 imports:
   - path: management_roles.py
   - path: role.py
-  - path: storage_stack_roles.py
+  - path: storage/storage_stack_roles.py
+    name: storage_stack_roles.py
 
 resources:
 - name: storage-stack-roles
