@@ -97,16 +97,18 @@ SECRET_STRING=$( jq -n \
 
 # Create scanner secrets environment variable
 echo -n "$SECRET_STRING" | \
-  gcloud secrets create $DEPLOYMENT_NAME_SCANNER-scanner-secrets --data-file=-
+  gcloud secrets create $DEPLOYMENT_NAME_SCANNER-scanner-secrets \
+    --replication-policy=user-managed --locations=$REGION \
+    --data-file=-
 
 # Allow scanner service account to access the secrets
 gcloud secrets add-iam-policy-binding $DEPLOYMENT_NAME_SCANNER-scanner-secrets \
-    --member="serviceAccount:$SCANNER_SERVICE_ACCOUNT_ID@$SCANNER_PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/secretmanager.secretAccessor"
+  --member="serviceAccount:$SCANNER_SERVICE_ACCOUNT_ID@$SCANNER_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 # Allow management service account to access the secrets
 gcloud secrets add-iam-policy-binding $DEPLOYMENT_NAME_SCANNER-scanner-secrets \
-    --member="serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT" \
-    --role="projects/$SCANNER_PROJECT_ID/roles/fss_secret_management_role"
+  --member="serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT" \
+  --role="projects/$SCANNER_PROJECT_ID/roles/fss_secret_management_role"
 
 sed -i.bak "s/<SCANNER_SECRETS>/$DEPLOYMENT_NAME_SCANNER-scanner-secrets/g" templates/scanner.yaml
 
@@ -125,13 +127,20 @@ SCANNER_SUBSCRIPTION_ID=${SUBSCRIPTIONS#*/*/*/}
 
 # Update scanner topic dead letter config
 gcloud pubsub subscriptions update $SCANNER_SUBSCRIPTION_ID \
-    --dead-letter-topic=$SCANNER_TOPIC_DLT \
-    --max-delivery-attempts=5
+  --dead-letter-topic=$SCANNER_TOPIC_DLT \
+  --max-delivery-attempts=5
 
 # Binding Pub/Sub service account
 gcloud pubsub subscriptions add-iam-policy-binding $SCANNER_SUBSCRIPTION_ID \
-    --member="serviceAccount:$PUBSUB_SERVICE_ACCOUNT"\
-    --role="roles/pubsub.subscriber"
+  --member="serviceAccount:$PUBSUB_SERVICE_ACCOUNT"\
+  --role="roles/pubsub.subscriber"
+
+# Binding appspot service account
+APPSPOT_SERVICE_ACCOUNT=$SCANNER_PROJECT_ID@appspot.gserviceaccount.com
+bindingCount=$(gcloud iam service-accounts get-iam-policy $APPSPOT_SERVICE_ACCOUNT --flatten=bindings --filter="bindings.members=serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT AND bindings.role=roles/iam.serviceAccountUser" --format='json' | jq length)
+[[ 0 < $bindingCount ]] \
+  || gcloud iam service-accounts add-iam-policy-binding $APPSPOT_SERVICE_ACCOUNT \
+    --member="serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT" --role=roles/iam.serviceAccountUser
 
 # Remove the artifact bucket
 gsutil rm -r gs://$ARTIFACT_BUCKET_NAME

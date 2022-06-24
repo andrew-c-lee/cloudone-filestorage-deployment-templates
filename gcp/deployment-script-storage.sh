@@ -107,6 +107,13 @@ STORAGE_PROJECT_ID=$(searchStorageJSONOutputs storageProjectID)
 BUCKET_LISTENER_SERVICE_ACCOUNT_ID=$(searchStorageJSONOutputs bucketListenerServiceAccountID)
 SCAN_RESULT_TOPIC=$(searchStorageJSONOutputs scanResultTopic)
 
+# Binding appspot service account
+APPSPOT_SERVICE_ACCOUNT=$STORAGE_PROJECT_ID@appspot.gserviceaccount.com
+bindingCount=$(gcloud iam service-accounts get-iam-policy $APPSPOT_SERVICE_ACCOUNT --flatten=bindings --filter="bindings.members=serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT AND bindings.role=roles/iam.serviceAccountUser" --format='json' | jq length)
+[[ 0 < $bindingCount ]] \
+  || gcloud iam service-accounts add-iam-policy-binding $APPSPOT_SERVICE_ACCOUNT \
+    --member="serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT" --role=roles/iam.serviceAccountUser
+
 # Binding service account and role on Pub/Sub Topics.
 # TODO Can be removed after backend API is ready
 gcloud pubsub topics add-iam-policy-binding $SCANNER_TOPIC --member="serviceAccount:$BUCKET_LISTENER_SERVICE_ACCOUNT_ID@$STORAGE_PROJECT_ID.iam.gserviceaccount.com" --role='roles/pubsub.publisher' --project $SCANNER_PROJECT_ID
