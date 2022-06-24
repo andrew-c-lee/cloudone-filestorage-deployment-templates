@@ -83,19 +83,21 @@ roleDeployment=$(gcloud deployment-manager deployments describe $FSS_ROLES_DEPLO
   && gcloud deployment-manager deployments update $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml) \
   || echo "$FSS_ROLES_DEPLOYMENT is updating. Skip updating the roles."
 
-sed -i.bak "s/<REGION>/$REGION/g" templates/storage.yaml
-sed -i.bak "s/<ARTIFACT_BUCKET_NAME>/$ARTIFACT_BUCKET_NAME/g" templates/storage.yaml
-sed -i.bak "s/<SCANNING_BUCKET_NAME>/$SCANNING_BUCKET_NAME/g" templates/storage.yaml
-sed -i.bak "s/<SCANNER_TOPIC>/$SCANNER_TOPIC/g" templates/storage.yaml
-sed -i.bak "s/<SCANNER_PROJECT_ID>/$SCANNER_PROJECT_ID/g" templates/storage.yaml
-sed -i.bak "s/<SCANNER_SERVICE_ACCOUNT_ID>/$SCANNER_SERVICE_ACCOUNT_ID/g" templates/storage.yaml
-sed -i.bak "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_STORAGE/g" templates/storage.yaml
-sed -i.bak "s/<REPORT_OBJECT_KEY>/$REPORT_OBJECT_KEY/g" templates/storage.yaml
-sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" templates/storage.yaml
-cat templates/storage.yaml
+STORAGE_YAML_PATH=templates/storage/storage.yaml
+sed -i.bak "s/<REGION>/$REGION/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<ARTIFACT_BUCKET_NAME>/$ARTIFACT_BUCKET_NAME/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<SCANNING_BUCKET_NAME>/$SCANNING_BUCKET_NAME/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<SCANNER_TOPIC>/$SCANNER_TOPIC/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<SCANNER_PROJECT_ID>/$SCANNER_PROJECT_ID/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<SCANNER_SERVICE_ACCOUNT_ID>/$SCANNER_SERVICE_ACCOUNT_ID/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_STORAGE/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<REPORT_OBJECT_KEY>/$REPORT_OBJECT_KEY/g" $STORAGE_YAML_PATH
+sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" $STORAGE_YAML_PATH
+
+cat $STORAGE_YAML_PATH
 
 # Create storage stack
-gcloud deployment-manager deployments create $DEPLOYMENT_NAME_STORAGE --config templates/storage.yaml
+gcloud deployment-manager deployments create $DEPLOYMENT_NAME_STORAGE --config $STORAGE_YAML_PATH
 
 STORAGE_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_STORAGE --format "json")
 

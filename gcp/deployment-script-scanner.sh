@@ -70,15 +70,19 @@ roleDeployment=$(gcloud deployment-manager deployments describe $FSS_ROLES_DEPLO
   && gcloud deployment-manager deployments update $FSS_ROLES_DEPLOYMENT --config templates/fss-roles.yaml) \
   || echo "$FSS_ROLES_DEPLOYMENT is updating. Skip updating the roles."
 
-sed -i.bak "s/<REGION>/$REGION/g" templates/scanner.yaml
-sed -i.bak "s/<ARTIFACT_BUCKET_NAME>/$ARTIFACT_BUCKET_NAME/g" templates/scanner.yaml
-sed -i.bak "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_SCANNER/g" templates/scanner.yaml
-sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" templates/scanner.yaml
-sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" templates/scanner-stack-service-accounts.yaml
-cat templates/scanner.yaml
+SCANNER_YAML_PATH=templates/scanner/scanner.yaml
+SCANNER_SA_YAML_PATH=templates/scanner/scanner-stack-service-accounts.yaml
+sed -i.bak "s/<REGION>/$REGION/g" $SCANNER_YAML_PATH
+sed -i.bak "s/<ARTIFACT_BUCKET_NAME>/$ARTIFACT_BUCKET_NAME/g" $SCANNER_YAML_PATH
+sed -i.bak "s/<DEPLOYMENT_NAME>/$DEPLOYMENT_NAME_SCANNER/g" $SCANNER_YAML_PATH
+sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" $SCANNER_YAML_PATH
+sed -i.bak "s/<MANAGEMENT_SERVICE_ACCOUNT_ID>/$MANAGEMENT_SERVICE_ACCOUNT/g" $SCANNER_SA_YAML_PATH
+
+cat $SCANNER_SA_YAML_PATH
+cat $SCANNER_YAML_PATH
 
 # Deploy scanner stack service account template
-gcloud deployment-manager deployments create $DEPLOYMENT_NAME_SCANNER --config templates/scanner-stack-service-accounts.yaml
+gcloud deployment-manager deployments create $DEPLOYMENT_NAME_SCANNER --config $SCANNER_SA_YAML_PATH
 
 SCANNER_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json")
 
@@ -110,10 +114,10 @@ gcloud secrets add-iam-policy-binding $DEPLOYMENT_NAME_SCANNER-scanner-secrets \
   --member="serviceAccount:$MANAGEMENT_SERVICE_ACCOUNT" \
   --role="projects/$SCANNER_PROJECT_ID/roles/fss_secret_management_role"
 
-sed -i.bak "s/<SCANNER_SECRETS>/$DEPLOYMENT_NAME_SCANNER-scanner-secrets/g" templates/scanner.yaml
+sed -i.bak "s/<SCANNER_SECRETS>/$DEPLOYMENT_NAME_SCANNER-scanner-secrets/g" $SCANNER_YAML_PATH
 
 # Update scanner template
-gcloud deployment-manager deployments update $DEPLOYMENT_NAME_SCANNER --config templates/scanner.yaml
+gcloud deployment-manager deployments update $DEPLOYMENT_NAME_SCANNER --config $SCANNER_YAML_PATH
 
 SCANNER_DEPLOYMENT=$(gcloud deployment-manager deployments describe $DEPLOYMENT_NAME_SCANNER --format "json")
 

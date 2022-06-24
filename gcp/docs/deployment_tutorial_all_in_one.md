@@ -15,9 +15,9 @@ This tutorial will guide you to protect an existing GCP bucket from malware by d
 The permissions that File Storage Security management roles will have after it has been deployed and configured are defined in:
 
 * <walkthrough-editor-open-file filePath="templates/management_roles.py">Management roles</walkthrough-editor-open-file>
-* <walkthrough-editor-open-file filePath="templates/storage_stack_roles.py">Storage stack management roles</walkthrough-editor-open-file>
+* <walkthrough-editor-open-file filePath="templates/storage/storage_stack_roles.py">Storage stack management roles</walkthrough-editor-open-file>
 
-### Backend updates
+### Backend updates (coming soon)
 
 For automatic backend updates that will be pushed, see [Update components](https://cloudone.trendmicro.com/docs/file-storage-security/component-update-gcp/).
 
