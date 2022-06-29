@@ -40,7 +40,7 @@ outputs:
   - name: bucketListenerServiceAccountID
     value: $(ref.storage-stack-service-accounts.bucketListenerServiceAccountID)
   - name: bucketListenerRoleID
-    value: $(ref.storage-stack.fssBucketListeneRoleID)
+    value: $(ref.storage-stack.fssBucketListenerRoleID)
   - name: postActionTagServiceAccountID
     value: $(ref.storage-stack-service-accounts.postActionTagServiceAccountID)
   - name: postActionTagRoleID

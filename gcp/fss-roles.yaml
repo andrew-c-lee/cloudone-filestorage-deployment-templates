@@ -13,8 +13,8 @@ resources:
   type: management_roles.py
 
 outputs:
-  - name: bucketListeneRoleID
-    value: $(ref.storage-stack-roles.fssBucketListeneRoleID)
+  - name: bucketListenerRoleID
+    value: $(ref.storage-stack-roles.fssBucketListenerRoleID)
   - name: cloudFunctionManagementRoleID
     value: $(ref.management-roles.fssCloudFunctionManagementRoleID)
   - name: deploymentManagementRoleID
