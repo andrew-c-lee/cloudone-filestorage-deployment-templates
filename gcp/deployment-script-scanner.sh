@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-while getopts d:r:u:m:c: args
+while getopts d:r:u:m:c:a: args
 do
   case "${args}" in
     d) DEPLOYMENT_NAME_SCANNER=${OPTARG};;
@@ -9,6 +9,7 @@ do
     u) PACKAGE_URL=${OPTARG};;
     m) MANAGEMENT_SERVICE_ACCOUNT=${OPTARG};;
     c) CLOUD_ONE_REGION=${OPTARG};;
+    a) CLOUD_ONE_ACCOUNT=${OPTARG};;
   esac
 done
 
@@ -22,6 +23,7 @@ echo "Region: $REGION";
 echo "Package URL: $PACKAGE_URL";
 echo "Management Service Account: $MANAGEMENT_SERVICE_ACCOUNT";
 echo "Cloud One Region: $CLOUD_ONE_REGION";
+echo "Cloud One Account: $CLOUD_ONE_ACCOUNT";
 echo "Will deploy file storage security protection unit scanner stack, Ctrl-C to cancel..."
 sleep 5
 
@@ -31,6 +33,10 @@ fi
 
 if [ -z "$CLOUD_ONE_REGION" ]; then
   CLOUD_ONE_REGION='us-1'
+fi
+
+if [ -z "$CLOUD_ONE_ACCOUNT" ]; then
+  CLOUD_ONE_ACCOUNT=''
 fi
 
 TEMPLATES_FILE='gcp-templates.zip'
@@ -97,7 +103,8 @@ SECRET_STRING=$( jq -n \
   --arg license 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ3d3cudHJlbmRtaWNyby5jb20iLCJleHAiOjE2NjQ3Njk2MDAsIm5iZiI6MTY1NTM2NjU4NCwiaWF0IjoxNjU1MzY2NTg0LCJzdWIiOiJnY3AtcHJldmlldy1saWNlbnNlIiwiY2xvdWRPbmUiOnsiYWNjb3VudCI6IjU2NDUwNTA5NDE4NyJ9fQ.CaoPvyzly9C5izjmdCxjYmQZpKY8p4wleHGqtORmhpin6r9Ek5g8KyrPy2Q40LOzt0fKf680ZbCi7JROGJ4HTi-sJVX7uyKsn9y8NBGhNpBYQplKck5DibYltbUFUOI5bPubHN0tjwg5_JFiE7PfDYls8X_wDHLq1nxnHLz1jhzRXbNE-OR01faM_NdV2IqZTV_Px7O75VC7W6GaSFZ1jK0U4Yk0IjBQzn-KX3En2oeF16FmADSof2B_TkcYFKizGhoO1oohzEKEOEwfX3Nyx6-BvyNE7tmgR5YJUdUO8fLWZF0Io8Qjoh44xjrj2rpXvqN-1_q-anE_dh6LnBImTwvnzBZI1hZgNnB7REbwBZAlLhc0RjcbPAC6Fw16xgIebBHB0pz4T4QTDPt9pcm_efQxiXbg9DjQFN9DwkPKJSt6XvFJO5yhu3pFXjosHjPSbwL4evnW_11rvrxwjfPb-oK8MOjb2sImgokv5yL2E4JyxeQ7y4vIizUMkhrIhG_bpakdGgbHJm6kOuVBkUY5yKssnRIh--Bgdtb5bH69fYxoN1JKljiLW7KDKvxq1MsQOWH-u6tBaUzl85p6Ehd-DmtecsQFq0gzxTD28JalIvRsZ5-fVtR6o2Akp02Za4GeTUZep6iyLYC8SEBj3cAm2LVMcpvPm-6OAqhLyzZN4wE' \
   --arg licenseSubject 'gcp-preview-license' \
   --arg fssAPIEndpoint "https://filestorage.$CLOUD_ONE_REGION.cloudone.trendmicro.com/api/" \
-  '{LICENSE: $license, FSS_API_ENDPOINT: $fssAPIEndpoint, LICENSE_SUBJECT: $licenseSubject}' )
+  --arg cloudOneAccount "$CLOUD_ONE_ACCOUNT" \
+  '{LICENSE: $license, FSS_API_ENDPOINT: $fssAPIEndpoint, LICENSE_SUBJECT: $licenseSubject, CLOUD_ONE_ACCOUNT: $cloudOneAccount}' )
 
 # Create scanner secrets environment variable
 echo -n "$SECRET_STRING" | \
