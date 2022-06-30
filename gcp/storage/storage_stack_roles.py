@@ -4,13 +4,13 @@ import role
 resources = []
 outputs = []
 
-BUCKET_LISTENER_ROLE = 'fss-bucket-listener-role'
-POST_ACTION_TAG_ROLE = 'fss-post-action-tag-role'
+BUCKET_LISTENER_ROLE = 'trend-micro-fss-bucket-listener-role'
+POST_ACTION_TAG_ROLE = 'trend-micro-fss-post-action-tag-role'
 
 roles = {
     BUCKET_LISTENER_ROLE: {
         'name': BUCKET_LISTENER_ROLE,
-        'key': 'fssBucketListeneRoleID',
+        'key': 'fssBucketListenerRoleID',
         'permissions': [
             'iam.serviceAccounts.signBlob'
         ]

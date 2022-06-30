@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-while getopts s:d:r:u:k:m:c: args
+while getopts s:d:r:u:k:m:c:a: args
 do
   case "${args}" in
     s) SCANNING_BUCKET_NAME=${OPTARG};;
@@ -11,6 +11,7 @@ do
     k) REPORT_OBJECT_KEY=${OPTARG};;
     m) MANAGEMENT_SERVICE_ACCOUNT=${OPTARG};;
     c) CLOUD_ONE_REGION=${OPTARG};;
+    a) CLOUD_ONE_ACCOUNT=${OPTARG};;
   esac
 done
 
@@ -32,7 +33,11 @@ if [ -z "$CLOUD_ONE_REGION" ]; then
   CLOUD_ONE_REGION='us-1'
 fi
 
-bash deployment-script-scanner.sh -d $DEPLOYMENT_NAME_SCANNER -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -u $PACKAGE_URL -c $CLOUD_ONE_REGION
+if [ -z "$CLOUD_ONE_ACCOUNT" ]; then
+  CLOUD_ONE_ACCOUNT=''
+fi
+
+bash deployment-script-scanner.sh -d $DEPLOYMENT_NAME_SCANNER -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -u $PACKAGE_URL -c $CLOUD_ONE_REGION -a $CLOUD_ONE_ACCOUNT
 bash deployment-script-storage.sh -s $SCANNING_BUCKET_NAME -d $DEPLOYMENT_NAME_STORAGE -r $REGION -m $MANAGEMENT_SERVICE_ACCOUNT -i "$(cat $DEPLOYMENT_NAME_SCANNER-info.json)" -u $PACKAGE_URL -k $REPORT_OBJECT_KEY
 
 echo "The stacks have been deployed successfully. Below is the content required to configure on File Storage Security console."
