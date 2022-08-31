@@ -76,7 +76,7 @@ Naming rules:
 1. **ROLE_TITLE length**: 1~100.
 
 ```sh
-gcloud iam roles create <ROLE_ID> --project=<PROJECT_ID> \
+gcloud iam roles create <ROLE_ID> --project=<walkthrough-project-id/> \
     --title=<ROLE_TITLE> --description="Custom role for deployment" \
     --permissions="cloudfunctions.functions.setIamPolicy,iam.roles.create,iam.serviceAccounts.setIamPolicy,pubsub.topics.setIamPolicy,resourcemanager.projects.setIamPolicy" --stage=GA
 ```
@@ -90,13 +90,13 @@ Bind the custom role to <GCP_PROJECT_NUMBER>@cloudservices.gserviceaccount.com. 
 1. Get project number:
 
 ```sh
-gcloud projects list --filter=<PROJECT_ID> --format="value(PROJECT_NUMBER)"
+gcloud projects list --filter=<walkthrough-project-id/> --format="value(PROJECT_NUMBER)"
 ```
 
 2. Bind service account:
 
 ```sh
-gcloud projects add-iam-policy-binding <PROJECT_ID> \
+gcloud projects add-iam-policy-binding <walkthrough-project-id/> \
     --member=serviceAccount:<PROJECT_NUMBER>@cloudservices.gserviceaccount.com
     --role=<ROLE_ID>
 ```
